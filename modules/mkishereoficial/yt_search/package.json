@@ -1,0 +1,30 @@
+{
+  "name": "@mkishereoficial/yt_search",
+  "version": "0.0.8",
+  "description": "Um pack simples para yt-search",
+  "main": "main.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MKIsHereOficial/yt_search.git"
+  },
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
+  "keywords": [
+    "youtube",
+    "search",
+    "yt-search",
+    "youtube-search"
+  ],
+  "author": "MKIsHereOficial",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MKIsHereOficial/yt_search/issues"
+  },
+  "homepage": "https://github.com/MKIsHereOficial/yt_search#readme",
+  "dependencies": {
+    "@vitalets/google-translate-api": "^4.0.0",
+    "yt-search": "^2.3.3"
+  }
+}

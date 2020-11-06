@@ -6,9 +6,10 @@ let language = "pt";
 let translate = require('@vitalets/google-translate-api');
 async function traduzir (value) {
 	let data = "Unavailable";
-	await translate(value, {to: language}).then(async (res) => {
+	/*await translate(value, {to: language}).then(async (res) => {
 		data = res.text;
-	})
+	})*/
+	data = value;
 	return data;
 }
 

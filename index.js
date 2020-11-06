@@ -84,10 +84,42 @@ io.on('connection', socket => {
 		}
 	});
 
-	const ytSearch = require('./modules/mkishereoficial/yt_search');
+	const yts = require('./modules/mkishereoficial/yt_search');
 
 	socket.on('getMusic', async (searched) => {
-		let log = console.log(searched) || fs.writeFileSync('./background-1.log', searched);
+		let err = null;
+		let finalPath = null;
+		let video;
+
+		try {
+		video = await yts(searched);
+		video = video.url;
+
+
+
+		let path = './public/background-1.mp3';
+		finalPath = '/background-1.mp3';
+
+		if (!fs.existsSync(path)) {
+			ytdl(video)
+				.pipe(fs.createWriteStream(path));
+
+				app.use('/background-1.mp3', (req, res) => {
+					res.sendFile(__dirname + '/public/background-1.mp3');
+				})
+
+			console.log('mp3 created at ', path);
+		}
+
+		} catch (error) {
+			err = error;
+		}
+
+		return socket.emit('receiveMusic', {
+			err,
+			cache: finalPath,
+			video
+		});
 	});
 
 });

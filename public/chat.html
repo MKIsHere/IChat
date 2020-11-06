@@ -9,7 +9,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.1/socket.io.js"></script>
-	<script src="https://sdk.scdn.co/spotify-player.js"></script>
 
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -62,15 +61,6 @@
 
 	
 	<script defer>
-		var backgroundAudio = new Audio('background-1.mp3');
-		backgroundAudio.addEventListener('loadeddata', () => {
-  		let duration = backgroundAudio.duration;
-			console.log(backgroundAudio);
-			console.log(duration);
-  		// The duration variable now holds the duration (in seconds) of the audio clip 
-		});	
-	</script>
-  <script defer>
   function readURL(input) {
     if (input.files && input.files[0]) {
       var reader = new FileReader();
@@ -278,6 +268,11 @@ $("#input_set-profile_image").change(function() {
 				}
 				let player = new Audio(data.cache);
 				player.play();
+
+				player.addEventListener('loadeddata', () => {
+  					let duration = player.duration;
+						console.log(player);
+					});	
 				return player;
 			});
 		}
