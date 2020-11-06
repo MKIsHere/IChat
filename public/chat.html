@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>IChat</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.1/socket.io.js"></script>
+	<script src="https://sdk.scdn.co/spotify-player.js"></script>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body onload="loaded=true">
+	<div id="background_background"></div>
+	<img id="background">
+
+  <div id="content-container" class="content-container">
+    <div class="chat-form_container">
+    <form id="chat">
+      <input type="text" name="username" placeholder="Nome de Usuário">
+      <div class="messages"></div>
+      <div class="message_input-container">
+        <input id="message-input" type="text" name="message" placeholder="Digite uma Mensagem">
+        <button id="message-submit" type="submit"><svg class="message-submit" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" version="1.1" width="512" height="512" x="0" y="0" viewBox="0 0 448.011 448.011" style="enable-background:new 0 0 512 512" xml:space="preserve" class="">
+        <g>
+        <g xmlns="http://www.w3.org/2000/svg">
+          <g>
+              <path d="M438.731,209.463l-416-192c-6.624-3.008-14.528-1.216-19.136,4.48c-4.64,5.696-4.8,13.792-0.384,19.648l136.8,182.4    l-136.8,182.4c-4.416,5.856-4.256,13.984,0.352,19.648c3.104,3.872,7.744,5.952,12.448,5.952c2.272,0,4.544-0.48,6.688-1.472    l416-192c5.696-2.624,9.312-8.288,9.312-14.528S444.395,212.087,438.731,209.463z" fill="currentColor" data-original="#000000" style="" class=""/>
+          </g>
+       </g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+        <g xmlns="http://www.w3.org/2000/svg"></g>
+    </g>
+ </svg></button>
+      </div>
+    </form>
+  </div>
+    <div id="settings">
+      <form id="form_set-profile_image">
+        <input id="input_set-profile_image" type="file" accept="image/*">
+        <img id="img_set-profile_image">
+      </form>
+    </div>
+  </div>
+
+	
+	<script defer>
+		var backgroundAudio = new Audio('background-1.mp3');
+		backgroundAudio.addEventListener('loadeddata', () => {
+  		let duration = backgroundAudio.duration;
+			console.log(backgroundAudio);
+			console.log(duration);
+  		// The duration variable now holds the duration (in seconds) of the audio clip 
+		});	
+	</script>
+  <script defer>
+  function readURL(input) {
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+
+      reader.onload = function(e) {
+        $('#img_set-profile_image').attr('src', e.target.result);
+      }
+
+      reader.readAsDataURL(input.files[0]); // convert to base64 string
+    }
+  }
+
+$("#input_set-profile_image").change(function() {
+	readURL(this);
+
+	if (!localStorage.getItem("avatar") || localStorage.getItem(`avatar`) == "undefined" || localStorage.getItem(`avatar`) == undefined) {
+		localStorage.setItem("avatar", `https://i.pinimg.com/736x/42/19/a0/4219a08c4faf63a87eef2bcfa5cd9ed7.jpg`);
+	}
+
+
+	localStorage.setItem(`avatar`, $('#img_set-profile_image').attr('src'));
+
+});
+  </script>
+	<script defer>
+		let baseBackgroundURL = `https://thumbs.gfycat.com/BlankSecondConch-size_restricted.gif`;
+		let background = localStorage.getItem('background');
+
+		if (!localStorage.getItem('background')) {
+			background = localStorage.setItem('background', baseBackgroundURL);
+		}
+
+
+		$('#background').attr('src', background);
+
+	</script>
+  <script defer type="text/javascript">
+
+		
+
+		let loaded = false;
+		let canPlay = false;
+
+    var socket = io('https://ichat.mkishereoficial.repl.co/');
+
+    socket.on('previusMessages', function (messages) {
+			const renderPrevius = function () {
+				if (messages) {
+      		return messages.map(message => {
+						canPlay = true;
+        		renderMessage(message);
+      		})
+				} else {
+					throw new Error(`ISE (Internal Server Error)`)
+				}
+			}
+
+			if (loaded) {
+				renderPrevius();
+			} else {
+				setInterval(() => {
+					if (loaded) {
+						renderPrevius();
+						clearInterval(this);
+					}
+				}, 100);
+			} 
+    });
+
+    socket.on('receivedMessage', function (message) {
+      return renderMessage(message);
+    });
+
+
+    function renderMessage(message) {
+      let author = message.author.username || message.author.id || message.author, content = message.content;
+      let date = message.createdAtTime;
+
+
+      let timestamp = `às ${date.hours}:${date.minutes}` || false;
+
+      let element = `<div class="message-container"><div class="message-author_container"><img class="message-author_avatar" oncontextmenu="return false;" src="${message.author.avatarURL}"><b class="message-author_username">${author}</b><b class="message-timestamp">${timestamp}</b></div><div class="message-content_container"><div class="message-content_margin"></div><b class="message-content">${content}</b></div></div>`;
+
+      if (!timestamp) {
+        element = `<div class="message-container"><strong>${author}</strong>: ${content} </div>`;
+      }
+
+      $('.messages').append(element);
+
+			$('.messages').scrollTop($('.messages')[0].scrollHeight);
+
+			socket.emit('notifyMessage', {author: message.author.username, receivedAt: localStorage.getItem('username')});
+			if (!('Notification' in window)) {
+    	console.log("This browser does not support notifications.");
+  	} else {
+			if (Notification.permission != 'granted') {
+				//Notification.requestPermission();
+				Notification.permission = 'granted';
+			} else {
+				const body = `${content}`;
+				const icon = message.author.avatarURL;
+				var notification = new Notification(`${message.author.username}`, { body, icon, badge: icon, tag: 'Message', vibrate: [200, 100, 200] });
+				document.addEventListener('visibilitychange', function() {
+ 		 			if (document.visibilityState === 'visible') {
+    				notification.close();
+  				}
+});
+			}
+		}
+
+      return message;
+    }
+
+		socket.on('notification', (message) => {
+			var notify = new Audio('juntos-607.mp3');
+				if (canPlay) {
+					notify.play();
+				} else {
+					setInterval(() => {
+						if (canPlay) {
+							notify.play();
+							clearInterval(this);
+						}
+					}, 100);
+				}
+		});
+
+		if (localStorage.getItem('username')) {
+				$('input[name=username]').val(`${localStorage.getItem('username')}`);
+		}
+		if (localStorage.getItem(`avatar`) && localStorage.getItem('avatar') != undefined && localStorage.getItem('avatar') != 'undefined') {
+				let avatar = localStorage.getItem(`avatar`);
+				$('#img_set-profile_image').attr('src', avatar);
+			}
+
+    function onMessage (event) {
+      event.preventDefault();
+
+      var userName = localStorage.getItem('username') || $('input[name=username]').val();
+      var messageContent = $('input[name=message]').val();
+      var avatar = $('#img_set-profile_image').attr('src');
+
+			if (localStorage.getItem(`avatar`) && localStorage.getItem('avatar') != undefined && localStorage.getItem('avatar') != 'undefined') {
+				avatar = localStorage.getItem(`avatar`);
+				$('#img_set-profile_image').attr('src', avatar);
+			}
+
+
+      const author = {
+        username: localStorage.getItem('username') || userName,
+        avatarURL: (async => {
+          return avatar || `https://i.pinimg.com/736x/42/19/a0/4219a08c4faf63a87eef2bcfa5cd9ed7.jpg`;
+        })()
+      };
+
+      console.log(author);
+
+      localStorage.setItem('username', author.username);
+      localStorage.setItem(`avatar`, author.avatarURL);
+
+      const date = new Date;
+
+      const createdAt = date;
+
+      let hours = (date.getHours() < 10) ? "0" + date.getHours() : date.getHours(), minutes = (date.getMinutes() < 10) ? "0" + date.getMinutes() : date.getMinutes(), seconds = (date.getSeconds() < 10) ? "0" + date.getSeconds() : date.getSeconds();
+
+      const createdAtTime = {
+        hours,
+        minutes,
+        seconds,
+        clock: (async => {
+          return `${hours}:${minutes}:${seconds}`;
+        })()
+      }
+
+      const timestamp = createdAt.getTime();
+
+      if (userName.length && messageContent.length) {
+        let messageObject = {
+          author,
+          content: messageContent,
+          createdAt,
+          createdAtTime,
+          timestamp
+        };
+
+
+				$('input[name=message]').val("");
+
+        socket.emit('sendMessage', messageObject);
+        return renderMessage(messageObject);
+      }
+    }
+
+    $('#chat').submit(onMessage);
+
+
+  </script>
+	<script defer>
+		const play = function (music) {
+			socket.emit('getMusic', music);
+			return socket.on('receiveMusic', (data) => {
+				if (data.err) {
+					throw data.err;
+				}
+				let player = new Audio(data.cache);
+				player.play();
+				return player;
+			});
+		}
+
+		play("Coffe for your head");
+	</script>
+</body>
+
+</html>
